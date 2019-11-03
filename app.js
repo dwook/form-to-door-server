@@ -8,6 +8,9 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var bookingsRouter = require('./routes/bookings');
 
+require('dotenv').config();
+const DATABASE_URI = process.env.DATABASE_URI;
+
 mongoose.connect(
   DATABASE_URI,
   { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true },
