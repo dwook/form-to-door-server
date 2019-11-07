@@ -28,7 +28,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: '*',
   credentials: true
 };
 
