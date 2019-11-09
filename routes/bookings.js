@@ -3,9 +3,7 @@ var router = express.Router();
 const bookingController = require('./controllers/bookingController');
 
 /* GET bookings listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.get('/', bookingController.getBookings);
 
 router.post('/', bookingController.createBooking);
 

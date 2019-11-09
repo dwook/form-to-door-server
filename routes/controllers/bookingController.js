@@ -4,7 +4,11 @@ const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
 const dayjs = require('dayjs');
+require('dotenv').config();
 
+const axios = require('axios');
+
+const SMS_APP_KEY = process.env.SMS_APP_KEY;
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_PATH = 'token.json';
 
@@ -104,7 +108,7 @@ var event = {
 };
 
 function insertEvents(auth, data) {
-  console.log(data);
+  // console.log(data);
   const calendar = google.calendar({ version: 'v3', auth });
   calendar.events.insert(
     {
@@ -113,7 +117,7 @@ function insertEvents(auth, data) {
     },
     (err, res) => {
       if (err) return console.log('The API returned an error: ' + err);
-      console.log(res);
+      // console.log(res);
     }
   );
 }
@@ -128,7 +132,7 @@ const insertEvent = data => {
 
 exports.createBooking = async function(req, res, next) {
   try {
-    console.log(req.body);
+    // console.log(req.body);
     const {
       name,
       email,
@@ -160,6 +164,7 @@ exports.createBooking = async function(req, res, next) {
     await booking.save();
     console.log('예약생성', booking);
 
+    // 구글 캘린더
     const data = {
       summary: `${branch} ${name}`,
       start: { dateTime: tour_date },
@@ -168,12 +173,50 @@ exports.createBooking = async function(req, res, next) {
       sendUpdates: 'all',
       attendees: [{ email: email }]
     };
-
-    console.log('구글데이터', data);
-    // // 구글 캘린더
+    // console.log('구글데이터', data);
     await insertEvent(data);
 
+    const smsData = {
+      body: `${name} 님, [${branch}점], ${dayjs(tour_date).format(
+        'YY년 MM월 DD일 HH:mm 타임'
+      )}에 투어예약이 완료되었습니다.`,
+      sendNo: '01073345096',
+      recipientList: [
+        {
+          recipientNo: mobile
+        }
+      ]
+    };
+
+    console.log(smsData);
+
+    await axios({
+      method: 'POST',
+      url: `https://api-sms.cloud.toast.com/sms/v2.3/appKeys/${SMS_APP_KEY}/sender/sms`,
+      data: smsData
+    })
+      .then(res => {
+        console.log('성공', res);
+      })
+      .catch(err => {
+        console.log('실패', err);
+      });
+
     res.json({ user, booking });
+  } catch {
+    next();
+  }
+};
+
+exports.getBookings = async function(req, res, next) {
+  try {
+    const bookings = await Booking.find()
+      .populate({ path: 'client', model: User })
+      .sort({ tour_date: -1 })
+      .exec();
+
+    console.log(bookings);
+    res.json({ bookings });
   } catch {
     next();
   }
