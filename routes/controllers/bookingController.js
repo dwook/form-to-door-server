@@ -58,55 +58,6 @@ function getAccessToken(oAuth2Client, callback, callbackData) {
   });
 }
 
-function listEvents(auth) {
-  const calendar = google.calendar({ version: 'v3', auth });
-  calendar.events.list(
-    {
-      calendarId: 'primary',
-      timeMin: new Date().toISOString(),
-      maxResults: 10,
-      singleEvents: true,
-      orderBy: 'startTime'
-    },
-    (err, res) => {
-      if (err) return console.log('The API returned an error: ' + err);
-      const events = res.data.items;
-      if (events.length) {
-        console.log('Upcoming 10 events:');
-        events.map((event, i) => {
-          const start = event.start.dateTime || event.start.date;
-          console.log(`${start} - ${event.summary}`);
-        });
-      } else {
-        console.log('No upcoming events found.');
-      }
-    }
-  );
-}
-
-var event = {
-  summary: 'Google I/O 2015',
-  location: '800 Howard St., San Francisco, CA 94103',
-  description: "A chance to hear more about Google's developer products.",
-  start: {
-    dateTime: '2019-11-08T09:00:00-07:00',
-    timeZone: 'America/Los_Angeles'
-  },
-  end: {
-    dateTime: '2019-11-09T17:00:00-07:00',
-    timeZone: 'America/Los_Angeles'
-  },
-  recurrence: ['RRULE:FREQ=DAILY;COUNT=2'],
-  attendees: [{ email: 'lpage@example.com' }, { email: 'sbrin@example.com' }],
-  reminders: {
-    useDefault: false,
-    overrides: [
-      { method: 'email', minutes: 24 * 60 },
-      { method: 'popup', minutes: 10 }
-    ]
-  }
-};
-
 function insertEvents(auth, data) {
   // console.log(data);
   const calendar = google.calendar({ version: 'v3', auth });
@@ -132,7 +83,7 @@ const insertEvent = data => {
 
 exports.createBooking = async function(req, res, next) {
   try {
-    // console.log(req.body);
+    console.log(req.body.data);
     const {
       name,
       email,
@@ -141,18 +92,28 @@ exports.createBooking = async function(req, res, next) {
       gender,
       branch,
       tour_date,
-      request
+      request,
+      segment
     } = req.body.data;
 
-    const user = new User({
-      name,
-      email,
-      mobile,
-      age: parseInt(age, 10),
-      gender
+    let user = await User.findOne({
+      mobile: mobile
     });
-    await user.save();
-    console.log('유저생성', user);
+
+    console.log('유저확인', user);
+
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        mobile,
+        age: parseInt(age, 10),
+        gender,
+        segment
+      });
+      await user.save();
+      console.log('유저생성', user);
+    }
 
     const booking = new Booking({
       branch,
@@ -160,47 +121,45 @@ exports.createBooking = async function(req, res, next) {
       request,
       client: user
     });
-
     await booking.save();
     console.log('예약생성', booking);
 
-    // 구글 캘린더
-    const data = {
-      summary: `${branch} ${name}`,
-      start: { dateTime: tour_date },
-      end: { dateTime: dayjs(tour_date).add(30, 'minute') },
-      description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
-      sendUpdates: 'all',
-      attendees: [{ email: email }]
-    };
-    // console.log('구글데이터', data);
-    await insertEvent(data);
+    // if (name !== 'manager') {
+    //   // 구글 캘린더 저장
+    //   const data = {
+    //     summary: `${branch} ${name}`,
+    //     start: { dateTime: tour_date },
+    //     end: { dateTime: dayjs(tour_date).add(30, 'minute') },
+    //     description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
+    //     sendUpdates: 'all',
+    //     attendees: [{ email: email }]
+    //   };
+    //   await insertEvent(data);
 
-    const smsData = {
-      body: `${name} 님, [${branch}점], ${dayjs(tour_date).format(
-        'YY년 MM월 DD일 HH:mm 타임'
-      )}에 투어예약이 완료되었습니다.`,
-      sendNo: '01073345096',
-      recipientList: [
-        {
-          recipientNo: mobile
-        }
-      ]
-    };
-
-    console.log(smsData);
-
-    await axios({
-      method: 'POST',
-      url: `https://api-sms.cloud.toast.com/sms/v2.3/appKeys/${SMS_APP_KEY}/sender/sms`,
-      data: smsData
-    })
-      .then(res => {
-        console.log('성공', res);
-      })
-      .catch(err => {
-        console.log('실패', err);
-      });
+    //   // sms 전송
+    //   const smsData = {
+    //     body: `${name} 님, [${branch}점], ${dayjs(tour_date).format(
+    //       'YY년 MM월 DD일 HH:mm 타임'
+    //     )}에 투어예약이 완료되었습니다.`,
+    //     sendNo: '01073345096',
+    //     recipientList: [
+    //       {
+    //         recipientNo: mobile
+    //       }
+    //     ]
+    //   };
+    //   await axios({
+    //     method: 'POST',
+    //     url: `https://api-sms.cloud.toast.com/sms/v2.3/appKeys/${SMS_APP_KEY}/sender/sms`,
+    //     data: smsData
+    //   })
+    //     .then(res => {
+    //       console.log('성공', res);
+    //     })
+    //     .catch(err => {
+    //       console.log('실패', err);
+    //     });
+    // }
 
     res.json({ user, booking });
   } catch {
@@ -208,12 +167,40 @@ exports.createBooking = async function(req, res, next) {
   }
 };
 
-exports.getBookings = async function(req, res, next) {
+exports.getBooking = async function(req, res, next) {
   try {
-    const bookings = await Booking.find()
-      .populate({ path: 'client', model: User })
-      .sort({ tour_date: -1 })
-      .exec();
+    console.log(req.query);
+    console.log(
+      dayjs(new Date(req.query.begin))
+        .startOf('day')
+        .toDate(),
+      dayjs(new Date(req.query.end))
+        .endOf('day')
+        .toDate()
+    );
+    let bookings;
+
+    if (req.query.branch) {
+      bookings = await Booking.find({
+        branch: req.query.branch,
+        tour_date: {
+          $gte: dayjs(new Date(req.query.begin))
+            .startOf('day')
+            .toDate(),
+          $lte: dayjs(new Date(req.query.end))
+            .endOf('day')
+            .toDate()
+        }
+      })
+        .populate({ path: 'client', model: User })
+        .sort({ tour_date: 1 })
+        .exec();
+    } else {
+      bookings = await Booking.find()
+        .populate({ path: 'client', model: User })
+        .sort({ tour_date: 1 })
+        .exec();
+    }
 
     console.log(bookings);
     res.json({ bookings });
