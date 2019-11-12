@@ -178,29 +178,70 @@ exports.getBooking = async function(req, res, next) {
         .endOf('day')
         .toDate()
     );
-    let bookings;
 
-    if (req.query.branch) {
-      bookings = await Booking.find({
-        branch: req.query.branch,
-        tour_date: {
-          $gte: dayjs(new Date(req.query.begin))
-            .startOf('day')
-            .toDate(),
-          $lte: dayjs(new Date(req.query.end))
-            .endOf('day')
-            .toDate()
-        }
-      })
-        .populate({ path: 'client', model: User })
-        .sort({ tour_date: 1 })
-        .exec();
-    } else {
-      bookings = await Booking.find()
-        .populate({ path: 'client', model: User })
-        .sort({ tour_date: 1 })
-        .exec();
+    const queryString = {};
+
+    if (req.query.client) {
+      queryString.client = req.query.client;
     }
+    if (req.query.branch) {
+      queryString.branch = req.query.branch;
+    }
+    if (req.query.begin) {
+      queryString.tour_date = {
+        $gte: dayjs(new Date(req.query.begin))
+          .startOf('day')
+          .toDate()
+      };
+    }
+    if (req.query.end) {
+      queryString.tour_date = {
+        $lte: dayjs(new Date(req.query.end))
+          .startOf('day')
+          .toDate()
+      };
+    }
+    console.log('쿼리', queryString);
+
+    // const q = {
+    //   branch: req.query.branch,
+    //   client: req.query.client,
+    //   tour_date: {
+    //     $gte: dayjs(new Date(req.query.begin))
+    //       .startOf('day')
+    //       .toDate(),
+    //     $lte: dayjs(new Date(req.query.end))
+    //       .endOf('day')
+    //       .toDate()
+    //   }
+    // };
+
+    const bookings = await Booking.find(queryString)
+      .populate({ path: 'client', model: User })
+      .sort({ tour_date: 1 })
+      .exec();
+
+    // if (req.query.branch) {
+    //   bookings = await Booking.find({
+    //     branch: req.query.branch,
+    //     tour_date: {
+    //       $gte: dayjs(new Date(req.query.begin))
+    //         .startOf('day')
+    //         .toDate(),
+    //       $lte: dayjs(new Date(req.query.end))
+    //         .endOf('day')
+    //         .toDate()
+    //     }
+    //   })
+    //     .populate({ path: 'client', model: User })
+    //     .sort({ tour_date: 1 })
+    //     .exec();
+    // } else {
+    //   bookings = await Booking.find()
+    //     .populate({ path: 'client', model: User })
+    //     .sort({ tour_date: 1 })
+    //     .exec();
+    // }
 
     console.log(bookings);
     res.json({ bookings });
