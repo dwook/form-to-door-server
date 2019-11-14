@@ -124,44 +124,20 @@ exports.createBooking = async function(req, res, next) {
     await booking.save();
     console.log('예약생성', booking);
 
-    // if (name !== 'manager') {
-    //   // 구글 캘린더 저장
-    //   const data = {
-    //     summary: `${branch} ${name}`,
-    //     start: { dateTime: tour_date },
-    //     end: { dateTime: dayjs(tour_date).add(30, 'minute') },
-    //     description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
-    //     sendUpdates: 'all',
-    //     attendees: [{ email: email }]
-    //   };
-    //   await insertEvent(data);
+    // 구글 캘린더 저장
+    if (name !== 'manager') {
+      const data = {
+        summary: `${branch} ${name}`,
+        start: { dateTime: tour_date },
+        end: { dateTime: dayjs(tour_date).add(30, 'minute') },
+        description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
+        sendUpdates: 'all',
+        attendees: [{ email: email }]
+      };
+      await insertEvent(data);
+    }
 
     sms('tourBook', mobile, name, branch, tour_date);
-
-    //   // sms 전송
-    //   const smsData = {
-    //     body: `${name} 님, [${branch}점], ${dayjs(tour_date).format(
-    //       'YY년 MM월 DD일 HH:mm 타임'
-    //     )}에 투어예약이 완료되었습니다.`,
-    //     sendNo: '01073345096',
-    //     recipientList: [
-    //       {
-    //         recipientNo: mobile
-    //       }
-    //     ]
-    //   };
-    //   await axios({
-    //     method: 'POST',
-    //     url: `https://api-sms.cloud.toast.com/sms/v2.3/appKeys/${SMS_APP_KEY}/sender/sms`,
-    //     data: smsData
-    //   })
-    //     .then(res => {
-    //       console.log('성공', res);
-    //     })
-    //     .catch(err => {
-    //       console.log('실패', err);
-    //     });
-    // }
 
     res.json({ user, booking });
   } catch {
@@ -201,50 +177,10 @@ exports.getBooking = async function(req, res, next) {
     }
     console.log('쿼리', queryString);
 
-    // if (req.query.end) {
-    //   queryString.tour_date = {
-    //     $lte: dayjs(new Date(req.query.end))
-
-    // }
-    // const q = {
-    //   branch: req.query.branch,
-    //   client: req.query.client,
-    //   tour_date: {
-    //     $gte: dayjs(new Date(req.query.begin))
-    //       .startOf('day')
-    //       .toDate(),
-    //     $lte: dayjs(new Date(req.query.end))
-    //       .endOf('day')
-    //       .toDate()
-    //   }
-    // };
-
     const bookings = await Booking.find(queryString)
       .populate({ path: 'client', model: User })
       .sort({ tour_date: 1 })
       .exec();
-
-    // if (req.query.branch) {
-    //   bookings = await Booking.find({
-    //     branch: req.query.branch,
-    //     tour_date: {
-    //       $gte: dayjs(new Date(req.query.begin))
-    //         .startOf('day')
-    //         .toDate(),
-    //       $lte: dayjs(new Date(req.query.end))
-    //         .endOf('day')
-    //         .toDate()
-    //     }
-    //   })
-    //     .populate({ path: 'client', model: User })
-    //     .sort({ tour_date: 1 })
-    //     .exec();
-    // } else {
-    //   bookings = await Booking.find()
-    //     .populate({ path: 'client', model: User })
-    //     .sort({ tour_date: 1 })
-    //     .exec();
-    // }
 
     console.log(bookings);
     res.json({ bookings });
