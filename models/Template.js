@@ -15,6 +15,9 @@ const templateSchema = new mongoose.Schema({
   },
   text: {
     type: String
+  },
+  medium: {
+    type: String
   }
 });
 

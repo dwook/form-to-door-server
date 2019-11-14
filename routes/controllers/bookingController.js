@@ -4,11 +4,11 @@ const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
 const dayjs = require('dayjs');
+const sms = require('../modules/sms.js');
 require('dotenv').config();
 
 const axios = require('axios');
 
-const SMS_APP_KEY = process.env.SMS_APP_KEY;
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 const TOKEN_PATH = 'token.json';
 
@@ -136,6 +136,8 @@ exports.createBooking = async function(req, res, next) {
     //   };
     //   await insertEvent(data);
 
+    sms('tourBook', mobile, name, branch, tour_date);
+
     //   // sms 전송
     //   const smsData = {
     //     body: `${name} 님, [${branch}점], ${dayjs(tour_date).format(
@@ -187,22 +189,23 @@ exports.getBooking = async function(req, res, next) {
     if (req.query.branch) {
       queryString.branch = req.query.branch;
     }
-    if (req.query.begin) {
+    if (req.query.begin && req.query.end) {
       queryString.tour_date = {
         $gte: dayjs(new Date(req.query.begin))
           .startOf('day')
-          .toDate()
-      };
-    }
-    if (req.query.end) {
-      queryString.tour_date = {
+          .toDate(),
         $lte: dayjs(new Date(req.query.end))
-          .startOf('day')
+          .endOf('day')
           .toDate()
       };
     }
     console.log('쿼리', queryString);
 
+    // if (req.query.end) {
+    //   queryString.tour_date = {
+    //     $lte: dayjs(new Date(req.query.end))
+
+    // }
     // const q = {
     //   branch: req.query.branch,
     //   client: req.query.client,
