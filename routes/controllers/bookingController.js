@@ -1,85 +1,9 @@
 const Booking = require('../../models/Booking.js');
 const User = require('../../models/User.js');
-const fs = require('fs');
-const readline = require('readline');
-const { google } = require('googleapis');
+
 const dayjs = require('dayjs');
 const sms = require('../modules/sms.js');
-require('dotenv').config();
-
-const axios = require('axios');
-
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-const TOKEN_PATH = 'token.json';
-
-// fs.readFile('credentials.json', (err, content) => {
-//   if (err) return console.log('Error loading client secret file:', err);
-//   authorize(JSON.parse(content), createEvents);
-// });
-
-function authorize(credentials, callback, callbackData) {
-  const { client_secret, client_id, redirect_uris } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
-    client_id,
-    client_secret,
-    redirect_uris[0]
-  );
-
-  // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
-    if (err) return getAccessToken(oAuth2Client, callback, callbackData);
-    oAuth2Client.setCredentials(JSON.parse(token));
-    callback(oAuth2Client, callbackData);
-  });
-}
-
-function getAccessToken(oAuth2Client, callback, callbackData) {
-  const authUrl = oAuth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: SCOPES
-  });
-  console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-  rl.question('Enter the code from that page here: ', code => {
-    rl.close();
-    oAuth2Client.getToken(code, (err, token) => {
-      if (err) return console.error('Error retrieving access token', err);
-      oAuth2Client.setCredentials(token);
-      // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), err => {
-        if (err) return console.error(err);
-        console.log('Token stored to', TOKEN_PATH);
-      });
-      callback(oAuth2Client, callbackData);
-    });
-  });
-}
-
-function insertEvents(auth, data) {
-  // console.log(data);
-  const calendar = google.calendar({ version: 'v3', auth });
-  calendar.events.insert(
-    {
-      calendarId: 'primary',
-      resource: data
-    },
-    (err, res) => {
-      if (err) return console.log('The API returned an error: ' + err);
-      // console.log(res);
-    }
-  );
-}
-
-const insertEvent = data => {
-  fs.readFile('credentials.json', (err, content) => {
-    if (err) return console.log('Error loading client secret file:', err);
-    // Authorize a client with credentials, then call the Google Calendar API.
-    authorize(JSON.parse(content), insertEvents, data);
-  });
-};
+const gcalendar = require('../modules/gcalendar.js');
 
 exports.createBooking = async function(req, res, next) {
   try {
@@ -124,20 +48,12 @@ exports.createBooking = async function(req, res, next) {
     await booking.save();
     console.log('예약생성', booking);
 
-    // 구글 캘린더 저장
     if (name !== 'manager') {
-      const data = {
-        summary: `${branch} ${name}`,
-        start: { dateTime: tour_date },
-        end: { dateTime: dayjs(tour_date).add(30, 'minute') },
-        description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
-        sendUpdates: 'all',
-        attendees: [{ email: email }]
-      };
-      await insertEvent(data);
+      // sms 전송
+      // await sms('tourBook', mobile, name, branch, tour_date);
+      // 구글 캘린더 저장
+      await gcalendar(mobile, name, branch, tour_date);
     }
-
-    sms('tourBook', mobile, name, branch, tour_date);
 
     res.json({ user, booking });
   } catch {

@@ -4,10 +4,11 @@ require('dotenv').config();
 
 const SMS_APP_KEY = process.env.SMS_APP_KEY;
 const COMPANY_PHONE = process.env.COMPANY_PHONE;
+const SERVER_URL = process.env.SERVER_URL;
 
 module.exports = async function(segment, mobile, name, branch, tour_date) {
   try {
-    const response = await axios.get('http://localhost:5000/api/templates', {
+    const response = await axios.get(`${SERVER_URL}/api/templates`, {
       params: {
         segment,
         medium: 'sms'
