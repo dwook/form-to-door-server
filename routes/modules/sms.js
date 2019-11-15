@@ -1,6 +1,10 @@
 const axios = require('axios');
 const dayjs = require('dayjs');
 
+const time = require('dayjs-ext/plugin/timeZone');
+dayjs.extend(time);
+const timeZone = 'Asia/Seoul';
+
 require('dotenv').config();
 const SMS_APP_KEY = process.env.SMS_APP_KEY;
 const COMPANY_PHONE = process.env.COMPANY_PHONE;
@@ -22,7 +26,7 @@ module.exports = async function(segment, mobile, name, branch, tour_date) {
     text = text.replace('{예약지점}', branch);
     text = text.replace(
       '{예약시간}',
-      dayjs(tour_date).format('YY년 MM월 DD일 HH:mm 타임')
+      dayjs(tour_date).format('YY년 MM월 DD일 HH:mm 타임', { timeZone })
     );
 
     const data = {
