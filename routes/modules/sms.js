@@ -1,10 +1,7 @@
 const axios = require('axios');
 const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-dayjs.extend(utc);
 
 require('dotenv').config();
-
 const SMS_APP_KEY = process.env.SMS_APP_KEY;
 const COMPANY_PHONE = process.env.COMPANY_PHONE;
 const SERVER_URL = process.env.SERVER_URL;
@@ -19,15 +16,13 @@ module.exports = async function(segment, mobile, name, branch, tour_date) {
     });
 
     console.log('선택된 템플릿', response.data.templates);
-
+    console.log('시간', tour_date);
     let { text } = response.data.templates[0];
     text = text.replace('{예약자이름}', name);
     text = text.replace('{예약지점}', branch);
     text = text.replace(
       '{예약시간}',
-      dayjs(tour_date)
-        .local()
-        .format('YY년 MM월 DD일 HH:mm 타임')
+      dayjs(tour_date).format('YY년 MM월 DD일 HH:mm 타임')
     );
 
     const data = {
