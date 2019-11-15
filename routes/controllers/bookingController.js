@@ -50,7 +50,7 @@ exports.createBooking = async function(req, res, next) {
 
     if (name !== 'manager') {
       // sms 전송
-      // await sms('tourBook', mobile, name, branch, tour_date);
+      await sms('tourBook', mobile, name, branch, tour_date);
       // 구글 캘린더 저장
       await gcalendar(mobile, name, branch, tour_date);
     }
