@@ -31,7 +31,6 @@ module.exports = async function(mobile, name, branch, tour_date) {
       sendUpdates: 'all'
     };
     console.log(data);
-    console.log(GOOGLE_PRIVATE_KEY);
     calendar.events.insert(
       {
         calendarId: GOOGLE_CALENDAR_ID,

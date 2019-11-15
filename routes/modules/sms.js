@@ -1,5 +1,8 @@
 const axios = require('axios');
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
+
 require('dotenv').config();
 
 const SMS_APP_KEY = process.env.SMS_APP_KEY;
@@ -22,7 +25,9 @@ module.exports = async function(segment, mobile, name, branch, tour_date) {
     text = text.replace('{예약지점}', branch);
     text = text.replace(
       '{예약시간}',
-      dayjs(tour_date).format('YY년 MM월 DD일 HH:mm 타임')
+      dayjs(tour_date)
+        .local()
+        .format('YY년 MM월 DD일 HH:mm 타임')
     );
 
     const data = {
