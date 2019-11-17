@@ -5,6 +5,10 @@ const dayjs = require('dayjs');
 const sms = require('../modules/sms.js');
 const gcalendar = require('../modules/gcalendar.js');
 
+const time = require('dayjs-ext/plugin/timeZone');
+dayjs.extend(time);
+const timeZone = 'Asia/Seoul';
+
 exports.createBooking = async function(req, res, next) {
   try {
     console.log(req.body.data);
@@ -65,12 +69,12 @@ exports.getBooking = async function(req, res, next) {
   try {
     console.log(req.query);
     console.log(
-      dayjs(new Date(req.query.begin))
+      dayjs(req.query.begin)
         .startOf('day')
-        .toDate(),
-      dayjs(new Date(req.query.end))
+        .format({ timeZone }),
+      dayjs(req.query.end)
         .endOf('day')
-        .toDate()
+        .format({ timeZone })
     );
 
     const queryString = {};
@@ -83,12 +87,12 @@ exports.getBooking = async function(req, res, next) {
     }
     if (req.query.begin && req.query.end) {
       queryString.tour_date = {
-        $gte: dayjs(new Date(req.query.begin))
+        $gte: dayjs(req.query.begin)
           .startOf('day')
-          .toDate(),
-        $lte: dayjs(new Date(req.query.end))
+          .format({ timeZone }),
+        $lte: dayjs(req.query.end)
           .endOf('day')
-          .toDate()
+          .format({ timeZone })
       };
     }
     console.log('쿼리', queryString);
