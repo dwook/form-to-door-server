@@ -19,8 +19,6 @@ module.exports = async function(segment, mobile, name, branch, tour_date) {
       }
     });
 
-    console.log('선택된 템플릿', response.data.templates);
-    console.log('시간', tour_date);
     let { text } = response.data.templates[0];
     text = text.replace('{예약자이름}', name);
     text = text.replace('{예약지점}', branch);
@@ -39,20 +37,18 @@ module.exports = async function(segment, mobile, name, branch, tour_date) {
       ]
     };
 
-    console.log('보내질 문자', data);
-
     await axios({
       method: 'POST',
       url: `https://api-sms.cloud.toast.com/sms/v2.3/appKeys/${SMS_APP_KEY}/sender/sms`,
       data
     })
       .then(res => {
-        console.log('sms 전송 성공', res);
+        console.log('Sending Success', res);
       })
       .catch(err => {
-        console.log('sms 전송 실패', err);
+        console.log('Sending Failure', err);
       });
   } catch (e) {
-    console.log(e);
+    next();
   }
 };

@@ -30,7 +30,6 @@ module.exports = async function(mobile, name, branch, tour_date) {
       description: `1.고객이름: ${name}, 2.휴대폰: ${mobile}, 3.예약지점: ${branch}`,
       sendUpdates: 'all'
     };
-    console.log(data);
     calendar.events.insert(
       {
         calendarId: GOOGLE_CALENDAR_ID,
@@ -42,6 +41,6 @@ module.exports = async function(mobile, name, branch, tour_date) {
       }
     );
   } catch (e) {
-    console.log(e);
+    next();
   }
 };

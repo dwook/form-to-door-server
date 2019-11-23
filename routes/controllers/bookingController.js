@@ -11,7 +11,6 @@ const timeZone = 'Asia/Seoul';
 
 exports.createBooking = async function(req, res, next) {
   try {
-    console.log(req.body.data);
     const {
       name,
       email,
@@ -28,8 +27,6 @@ exports.createBooking = async function(req, res, next) {
       mobile: mobile
     });
 
-    console.log('유저확인', user);
-
     if (!user) {
       user = new User({
         name,
@@ -40,7 +37,6 @@ exports.createBooking = async function(req, res, next) {
         segment
       });
       await user.save();
-      console.log('유저생성', user);
     }
 
     const booking = new Booking({
@@ -50,7 +46,6 @@ exports.createBooking = async function(req, res, next) {
       client: user
     });
     await booking.save();
-    console.log('예약생성', booking);
 
     if (name !== 'manager') {
       // sms 전송
@@ -67,16 +62,6 @@ exports.createBooking = async function(req, res, next) {
 
 exports.getBooking = async function(req, res, next) {
   try {
-    console.log(req.query);
-    console.log(
-      dayjs(req.query.begin)
-        .startOf('day')
-        .format({ timeZone }),
-      dayjs(req.query.end)
-        .endOf('day')
-        .format({ timeZone })
-    );
-
     const queryString = {};
 
     if (req.query.client) {
@@ -95,14 +80,12 @@ exports.getBooking = async function(req, res, next) {
           .format({ timeZone })
       };
     }
-    console.log('쿼리', queryString);
 
     const bookings = await Booking.find(queryString)
       .populate({ path: 'client', model: User })
       .sort({ tour_date: 1 })
       .exec();
 
-    console.log(bookings);
     res.json({ bookings });
   } catch {
     next();

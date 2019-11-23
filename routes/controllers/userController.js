@@ -3,9 +3,7 @@ const sms = require('../modules/sms');
 
 exports.getUserById = async function(req, res, next) {
   try {
-    console.log('요청유저아이디', req.params.user_id);
     const user = await User.findById(req.params.user_id);
-    console.log('유저', user);
     res.json({ user });
   } catch {
     next();
@@ -14,11 +12,8 @@ exports.getUserById = async function(req, res, next) {
 
 exports.editUser = async function(req, res, next) {
   try {
-    console.log('요청유저', req.params.user_id, req.body.data);
-
     const user = await User.findById(req.params.user_id);
     const { segment, name, email, mobile, age, gender } = req.body.data;
-    console.log('세그먼트 변동', user.segment, segment);
     if (user.segment !== segment) {
       switch (segment) {
         case 'tourNoShow':
