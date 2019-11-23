@@ -14,13 +14,13 @@
 
 ## User Case
 
-1. 고객의 방문 예약 신청 <br/>
+1. 고객의 방문 예약 신청 (https://www.dwook.online) <br/>
    <img src="justlive.gif" width="400" height="600">
 
 2. 고객에게 전달되는 예약 확인 SMS <br/>
    <img src="sms1.jpeg" width='300' height="534">
 
-3. 관리자가 확인하는 방문 예약 리스트 및 고객 세그먼트 변경 과정 <br/>
+3. 관리자가 확인하는 방문 예약 리스트 및 고객 세그먼트 변경 과정 (https://www.formtodoor.online) <br/>
    <img src="formtodoor_list.gif" width="800" height='416'>
 
 4. 고객이 노쇼를 할 경우 발송 되는 SMS <br/>
@@ -95,6 +95,8 @@ npm start
 
 - Notion을 이용한 스케줄 관리 및 Task 정리
 - Figma를 이용한 유저 인터페이스 디자인 설계
+
+<img src="figma_formtodoor.png">
 
 # Deployment
 
